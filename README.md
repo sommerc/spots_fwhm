@@ -1,7 +1,7 @@
 # fwhm_on_spots
 ## Full-width-half-maximum of 2D spots
-This jython-fiji macro computes the FWHM on bright spots on dark background by
-1) finding all maxima in an image (using fiji `find maxima`) and 2) iterating 
+This jython-fiji macro computes the FWHM on bright spots on dark background by, 
+first, finding all maxima in an image (using fiji `find maxima`) and second, iterating 
 over all 2d peak location. For each peak the horizontal and vertical line intensity 
 profile is extracted and a general Gaussian function is fit. From that the standard
 deviation and goodness-of-fit is extracted. The standard deviation is converted 
