@@ -22,6 +22,10 @@ exported into a fiji RoiManager zip-file.
 1. `fwhm_values.txt`: Peak locations, FWHM in pixel and nano-meter, plus goodness-of-fit
 2. `fwhm_fiji_rois.zip`: Rois with horizontal and vertical line profiles
 
+### Example
+![Example Img](exp_0.png "Example peaks")
+![Example Rois](exp_1.png "Detected Rois")
+
 
 
 
