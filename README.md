@@ -25,8 +25,8 @@ exported into a fiji RoiManager zip-file.
     * x_pos, y_pos: the x and y position in image
     * type: horizontal (H), vertical (V), diagonal 1 (D1), diagonal 2 (D2)
     * fwhm: full width half maximum of Gaussian fit
-    * fwhm_nm: fwhm scaled by pixel size
-    * r2_GoF: goodness of fit. Good values are > 0.9
+    * fwhm_nm: FWHM scaled by pixel size
+    * r2_GoF: goodness of fit. Good values for a fit should be > 0.9
     * avg_fwhm: average of all fwhm of the four types (H, V, D1, D2)
     * area_profile: area under the profile
     * area_gauss: area under the Gaussian fit 
