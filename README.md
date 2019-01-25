@@ -12,8 +12,8 @@ readable file. In additions, all (fiji-)Rois of the according line profiles are
 exported into a fiji RoiManager zip-file.
 
 ### Input
-1. Image: An gray-valued image (already opened in fiji)
-2. Peak tolerance: Height of the peak above background (see fiji `find maxima`)
+1. Image: A gray-valued image (already opened in fiji)
+2. Peak tolerance: Height of the peak above background (see fiji `Find Maxima`)
 3. Window radius for Gaussian fit in pixel
 4. Pixel size in nano-meters (for export)
 5. Output directory (for export)
