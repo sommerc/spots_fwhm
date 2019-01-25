@@ -8,6 +8,7 @@
 import os
 import sys
 import csv
+import math
 from ij import IJ
 from ij.gui import PointRoi
 from ij.gui import ProfilePlot
@@ -17,22 +18,59 @@ from ij.plugin.frame import RoiManager
 from ij.plugin.filter import MaximumFinder
 from ij.measure import ResultsTable, CurveFitter
 
+# magic number sqrt(2)/2
+MN = math.cos(math.pi/4)
 
+# Plot gauss fit for peak_id == DEBUG, -1 for not
+DEBUG = -1
+
+# Curve fit for Gaussian
+def fit_gauss(lroi, imp, p, peak_id, id_, type_, rm):
+	lroi.setName("{}_{}_{}".format(str(id_), peak_id, type_))
+	imp.setRoi(lroi)
+	rm.addRoi(lroi)
+	
+	prof = ProfilePlot(imp)
+	y = prof.getProfile()
+	x = xrange(len(y))
+	
+	fitter = CurveFitter(x, y)
+	fitter.doFit(CurveFitter.GAUSSIAN)
+	param_values = fitter.getParams()
+	std = param_values[3]
+	fwhm = 2.3548 * std
+	r2 = fitter.getFitGoodness()
+
+	y_ = [fitter.f(x_) for x_ in x]
+	
+	area_profile = sum(y)  - len(y) *min(y)
+	area_gauss   = sum(y_) - len(y_)*min(y_)
+	
+	output = {}
+	output["x_pos"] = p.x
+	output["y_pos"] = p.y
+	output["fwhm"] = fwhm
+	output["fwhm_nm"] = pixel_size_nm * fwhm
+	output["r2_GoF"] = r2
+	output["id"] = id_
+	output["peak_id"] = peak_id
+	output["type"] = type_
+	output["avg_fwhm"] = '=AVERAGEIFS(F:F,B:B,B{},F:F,"<>"&"")'.format(id_+2)
+	output["area_profile"] = area_profile
+	output["area_gauss"] = area_gauss
+
+	if peak_id == DEBUG:		
+		plot = Plot("ROI peak {} type {}".format(peak_id, type_), "X (gray)", "Y (fit window)")
+		plot.setLineWidth(2)
+		plot.setColor(Color.RED)
+		plot.addPoints(x, y, Plot.LINE)
+		plot.setColor(Color.BLUE)
+		plot.addPoints(x, y_, Plot.LINE)
+		plot.show()
+		
+	return  output
 
 def main(imp, tolerance, window_radius, pixel_size_nm, out_dir):
-	# Curve fit for Gaussian
-	def fit_gauss():
-		y = prof.getProfile()
-		x = xrange(len(y))
-		fitter = CurveFitter(x, y)
-		fitter.doFit(CurveFitter.GAUSSIAN)
-		param_values = fitter.getParams()
-		std = param_values[3]
-		fwhm = 2.3548 * std
-		r2 = fitter.getFitGoodness()
-	
-		return  fwhm, r2
-
 	# set output dir
 	out_dir = str(out_dir)
 	
@@ -40,52 +78,61 @@ def main(imp, tolerance, window_radius, pixel_size_nm, out_dir):
 	excludeOnEdge = True
 	polygon = MaximumFinder().getMaxima(imp.getProcessor(), tolerance, excludeOnEdge)
 	roi = PointRoi(polygon)
-	
+
+	# get RoiManager
 	rm = RoiManager.getInstance();
-	if (rm is None):
+	if rm is None:
 	    rm = RoiManager()
+
+	# Check if output table is writable
+	out_table_fn = os.path.join(out_dir, "fwhm_values.txt")
+	try:
+		file_handle = open(out_table_fn, 'w')
+	except IOError:
+		IJ.showMessage("Output file '' not writeable. Check if file is open in Excel...")
+		sys.exit(0)
+				
 	
 	# iterate and write output
-	with open(os.path.join(out_dir, "fwhm_values.txt"), 'w') as csvfile:
+	with file_handle as csvfile:
 		writer = csv.DictWriter(csvfile, 
-		                        fieldnames=["id", "x_pos", "y_pos", "type", "fwhm", "fwhm_nm", "r2"], delimiter="\t", lineterminator='\n')
+		                        fieldnames=["id", "peak_id", "x_pos", "y_pos", 
+		                                    "type", "fwhm", "fwhm_nm", "r2_GoF", 
+		                                    "avg_fwhm", "area_profile", "area_gauss"], delimiter="\t", lineterminator='\n')
 		writer.writeheader()
+		id_ = 0
+		# over all peaks
 		for i, p in list(enumerate(roi)):
 			IJ.showProgress(i, roi.getNCounters() +1)
-			# Horizontal
-			id_ = i * 2
-			output = {}
-			lh = Line(p.x+0.5-window_radius, p.y+0.5, p.x+0.5+window_radius, p.y+0.5)
-			lh.setName(str(id_))
-			rm.addRoi(lh)
-			imp.setRoi(lh)
-			prof = ProfilePlot(imp)
-			fwhm_h, r2_h = fit_gauss()
-			output["id"] = id_
-			output["x_pos"] = p.x
-			output["y_pos"] = p.y
-			output["type"] = "H"
-			output["fwhm"] = fwhm_h
-			output["fwhm_nm"] = pixel_size_nm * output["fwhm"]
-			output["r2"] = r2_h
-		
-			writer.writerow(output)
 			
-			# Vertical
-			id_ = i * 2 + 1
-			lv = Line(p.x+0.5, p.y+0.5-window_radius, p.x+0.5, p.y+0.5+window_radius)
-			lv.setName(str(id_))
-			imp.setRoi(lv)
-			rm.addRoi(lv)
-			prof = ProfilePlot(imp)
-			fwhm_v, r2_v = fit_gauss()
-			output["id"] = id_
-			output["type"] = "V"
-			output["fwhm"] = fwhm_v
-			output["fwhm_nm"] = pixel_size_nm * output["fwhm"]
-			output["r2"] = r2_v
-		
+			# Horizontal
+			lroi = Line(p.x+0.5-window_radius, p.y+0.5, 
+			            p.x+0.5+window_radius, p.y+0.5)
+			output = fit_gauss(lroi, imp, p, i, id_, "H", rm)
 			writer.writerow(output)
+			id_+=1
+
+			# Vertical
+			lroi = Line(p.x+0.5, p.y+0.5-window_radius, 
+			            p.x+0.5, p.y+0.5+window_radius)
+			output = fit_gauss(lroi, imp, p, i, id_, "V", rm)
+			writer.writerow(output)
+			id_+=1
+
+			# Diagonal 1
+			lroi = Line(p.x+0.5-MN*window_radius, p.y+0.5+MN*window_radius, 
+			            p.x+0.5+MN*window_radius, p.y+0.5-MN*window_radius)
+			output = fit_gauss(lroi, imp, p, i, id_, "D1", rm)
+			writer.writerow(output)
+			id_+=1
+
+			# Diagonal 2
+			lroi = Line(p.x+0.5-MN*window_radius, p.y+0.5-MN*window_radius, 
+			            p.x+0.5+MN*window_radius, p.y+0.5+MN*window_radius)
+			output = fit_gauss(lroi, imp, p, i, id_, "D2", rm)
+			writer.writerow(output)
+			id_+=1
+			
 	IJ.showProgress(1)
 	
 	rm.runCommand("Deselect"); # deselect ROIs to save them all
