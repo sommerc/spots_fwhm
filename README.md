@@ -19,7 +19,7 @@ exported into a fiji RoiManager zip-file.
 5. Output directory (for export)
 
 ### Output
-1. `fwhm_values.txt`: Peak locations, FWHM in pixel and nano-meter, plus goodness-of-fit. Exported Columns are
+1. `fwhm_values.txt`: Columns are:
     * id: index
     * peak_id: number of peak
     * x_pos, y_pos: the x and y position in image
@@ -27,11 +27,11 @@ exported into a fiji RoiManager zip-file.
     * fwhm: full width half maximum of Gaussian fit
     * fwhm_nm: FWHM scaled by pixel size
     * r2_GoF: goodness of fit. Good values for a fit should be > 0.9
-    * avg_fwhm: average of all fwhm of the four types (H, V, D1, D2)
+    * avg_fwhm: average of all fwhm of the four types (H, V, D1, D2) per peak_id
     * area_profile: area under the profile
     * area_gauss: area under the Gaussian fit 
     
-2. `fwhm_fiji_rois.zip`: Fiji-Rois with horizontal, vertical and diagonal line profiles
+2. `fwhm_fiji_rois.zip`: Fiji-Rois with horizontal, vertical and diagonal line profiles named as "\<index>\_\<peak_id\>\_\<type\>"
 
 ### Example
 ![Example Img](exp_0.png "Example peaks")
