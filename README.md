@@ -33,9 +33,20 @@ exported into a fiji RoiManager zip-file.
     
 2. `fwhm_fiji_rois.zip`: Fiji-Rois with horizontal, vertical and diagonal line profiles named as "\<index>\_\<peak_id\>\_\<type\>"
 
+### Installation
+1. Install into fiji's plugin-folder
+
+   Download and copy `fwhm_on_spots.py` to your the fiji plugin-folder
+
+2. From scipt editor
+ 
+   Download `fwhm_on_spots.py` and open it in fiji's script editor and run it from there
+ 
 ### Example
 ![Example Img](exp_0.png "Example peaks")
 ![Example Rois](exp_1.png "Detected Rois")
+
+You can download the used [test image](test/test_img.tif).
 
 
 
