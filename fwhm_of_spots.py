@@ -55,6 +55,7 @@ def fit_gauss(lroi, imp, p, peak_id, id_, type_, rm):
 	output["id"] = id_
 	output["peak_id"] = peak_id
 	output["type"] = type_
+	# yai, excel maagic :-)
 	output["avg_fwhm"] = '=AVERAGEIFS(F:F,B:B,B{},F:F,"<>"&"")'.format(id_+2)
 	output["area_profile"] = area_profile
 	output["area_gauss"] = area_gauss
